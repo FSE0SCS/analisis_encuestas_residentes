@@ -4,7 +4,7 @@ import streamlit as st
 import pandas as pd
 from modulos.autenticacion import login_form
 from modulos.procesamiento_datos import fusionar_archivos_excel
-from modulos.analisis_cuantitativo import obtener_preguntas_cuantitativas, generar_analisis_cuantitativo
+from modulos.analisis_cuantitativo import obtener_preguntas_cuantitativas, generar_analisis_cuantitativo, exportar_a_word
 from modulos.analisis_cualitativo import obtener_preguntas_cualitativas, generar_analisis_cualitativo
 from modulos.modulo_comparador import mostrar_modulo_comparador
 import os
@@ -96,7 +96,15 @@ def main():
                     )
                     if st.button("Procesar Análisis Cuantitativo"):
                         if preguntas_seleccionadas:
-                            generar_analisis_cuantitativo(st.session_state.df_principal, preguntas_seleccionadas)
+                            resultados = generar_analisis_cuantitativo(st.session_state.df_principal, preguntas_seleccionadas)
+                            if resultados:
+                                doc_buffer = exportar_a_word(resultados)
+                                st.download_button(
+                                    label="Exportar a Word",
+                                    data=doc_buffer,
+                                    file_name="analisis_cuantitativo.docx",
+                                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                )
                         else:
                             st.warning("Por favor, selecciona al menos una pregunta para analizar.")
                 else:

@@ -112,24 +112,26 @@ def generar_analisis_cuantitativo(df, preguntas_seleccionadas):
 def exportar_a_word(resultados):
     """
     Genera un archivo de Word con los resultados del análisis.
-    (Esta es una implementación simulada. La exportación real a Word requeriría librerías como python-docx).
     """
-    buffer = BytesIO()
-    st.write("Generando documento Word...")
+    document = Document()
+    document.add_heading('Resultados del Análisis Cuantitativo', 0)
     
-    # Aquí iría el código real para generar el documento de Word
-    # Por simplicidad, simularemos el contenido en un archivo de texto
-    with buffer as f:
-        f.write("Resultados del Análisis Cuantitativo\n\n".encode())
-        for resultado in resultados:
-            f.write(f"--- Análisis para: {resultado['pregunta']} ---\n\n".encode())
-            f.write("Análisis Descriptivo:\n".encode())
-            f.write(resultado['analisis_descriptivo'].to_string().encode())
-            f.write("\n\n".encode())
-            f.write("Explicación:\n".encode())
-            f.write(resultado['explicacion'].encode())
-            f.write("\n\n".encode())
-            
-        st.success("Documento Word generado.")
+    for resultado in resultados:
+        document.add_heading(f"Análisis para: {resultado['pregunta']}", level=1)
+        document.add_paragraph("Análisis Descriptivo:")
+        document.add_paragraph(resultado['analisis_descriptivo'].to_string())
         
+        document.add_paragraph("Explicación:")
+        document.add_paragraph(resultado['explicacion'])
+        
+        # Guardar el gráfico en un buffer para insertarlo en el documento
+        img_buffer = BytesIO()
+        resultado['figura'].savefig(img_buffer, format='png')
+        img_buffer.seek(0)
+        document.add_picture(img_buffer, width=Inches(6))
+        
+    buffer = BytesIO()
+    document.save(buffer)
+    buffer.seek(0)
+    
     return buffer
