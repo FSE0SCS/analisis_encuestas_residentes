@@ -1,0 +1,14 @@
+# Archivos de caché de Python
+__pycache__/
+*.pyc
+
+# Archivos de entorno virtual
+.env
+
+# Archivos de datos generados
+fusionado_*.xlsx
+/datos/
+
+# Archivos de sistema operativo
+.DS_Store
+Thumbs.db
