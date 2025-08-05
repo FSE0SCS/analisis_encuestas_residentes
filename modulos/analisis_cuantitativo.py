@@ -12,7 +12,6 @@ def obtener_preguntas_cuantitativas(df):
     Identifica y devuelve las columnas con preguntas de tipo cuantitativo
     basándose en la lista proporcionada por el usuario.
     """
-    # Lista de preguntas cuantitativas extraída del archivo adjunto
     preguntas_cuantitativas_lista = [
         "Durante el primer año de residencia, valore el proceso de acogida en su Servicio",
         "Valore el proceso de integración en su Servicio desde que inició su formación hasta la actualidad",
@@ -63,7 +62,6 @@ def obtener_preguntas_cuantitativas(df):
         "Valore la satisfacción global respecto a su residencia"
     ]
     
-    # Filtra las columnas del DataFrame que coincidan con la lista
     preguntas_en_df = [col for col in df.columns if col in preguntas_cuantitativas_lista]
     
     return preguntas_en_df
@@ -77,36 +75,49 @@ def generar_analisis_cuantitativo(df, preguntas_seleccionadas):
     for pregunta in preguntas_seleccionadas:
         st.subheader(f"Análisis para la pregunta: {pregunta}")
         
-        # 1. Análisis estadístico
-        analisis_descriptivo = df[pregunta].describe()
-        st.write("Valores analizados:")
-        st.write(analisis_descriptivo)
+        # 1. Limpiar y convertir datos
+        try:
+            # Convertir la columna a tipo numérico, forzando errores a NaN
+            columna_numerica = pd.to_numeric(df[pregunta], errors='coerce').dropna()
+            
+            # Verificar si la columna no está vacía después de la limpieza
+            if columna_numerica.empty:
+                st.warning(f"La pregunta '{pregunta}' no contiene datos numéricos válidos para el análisis.")
+                continue
 
-        # 2. Visualización Gráfica
-        fig, ax = plt.subplots()
-        df[pregunta].hist(ax=ax, bins=10)
-        ax.set_title(f"Distribución de {pregunta}")
-        ax.set_xlabel("Valor")
-        ax.set_ylabel("Frecuencia")
-        st.pyplot(fig)
-        plt.close(fig)
+            # 2. Análisis estadístico
+            analisis_descriptivo = columna_numerica.describe()
+            st.write("Valores analizados:")
+            st.write(analisis_descriptivo)
 
-        # 3. Explicación del análisis (ejemplo simple)
-        explicacion = (
-            "El análisis descriptivo muestra un resumen estadístico de la pregunta. "
-            "La media, mediana y desviación estándar indican la tendencia central y la dispersión de los datos. "
-            "El histograma visualiza la distribución de las respuestas, mostrando la frecuencia de cada valor."
-        )
-        st.write("Información del análisis y explicación:")
-        st.write(explicacion)
-        
-        resultados_analisis.append({
-            "pregunta": pregunta,
-            "analisis_descriptivo": analisis_descriptivo,
-            "explicacion": explicacion,
-            "figura": fig
-        })
-    
+            # 3. Visualización Gráfica
+            fig, ax = plt.subplots()
+            columna_numerica.hist(ax=ax, bins=10)
+            ax.set_title(f"Distribución de {pregunta}")
+            ax.set_xlabel("Valor")
+            ax.set_ylabel("Frecuencia")
+            st.pyplot(fig)
+            plt.close(fig)
+
+            # 4. Explicación del análisis
+            explicacion = (
+                "El análisis descriptivo muestra un resumen estadístico de la pregunta. "
+                "La media, mediana y desviación estándar indican la tendencia central y la dispersión de los datos. "
+                "El histograma visualiza la distribución de las respuestas, mostrando la frecuencia de cada valor."
+            )
+            st.write("Información del análisis y explicación:")
+            st.write(explicacion)
+            
+            resultados_analisis.append({
+                "pregunta": pregunta,
+                "analisis_descriptivo": analisis_descriptivo,
+                "explicacion": explicacion,
+                "figura": fig
+            })
+
+        except Exception as e:
+            st.error(f"Error inesperado al procesar la pregunta '{pregunta}': {e}")
+            
     return resultados_analisis
 
 def exportar_a_word(resultados):

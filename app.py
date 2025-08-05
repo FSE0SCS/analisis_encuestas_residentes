@@ -4,8 +4,8 @@ import streamlit as st
 import pandas as pd
 from modulos.autenticacion import login_form
 from modulos.procesamiento_datos import fusionar_archivos_excel
-from modulos.analisis_cuantitativo import obtener_preguntas_cuantitativas, generar_analisis_cuantitativo, exportar_a_word
-from modulos.analisis_cualitativo import obtener_preguntas_cualitativas, generar_analisis_cualitativo
+from modulos.analisis_cuantitativo import obtener_preguntas_cuantitativas, generar_analisis_cuantitativo, exportar_a_word as exportar_cuantitativo_a_word
+from modulos.analisis_cualitativo import obtener_preguntas_cualitativas, generar_analisis_cualitativo, exportar_analisis_cualitativo_a_word
 from modulos.modulo_comparador import mostrar_modulo_comparador
 import os
 
@@ -89,16 +89,26 @@ def main():
             elif st.session_state.modulo_actual == "Cuantitativo":
                 st.header("Módulo de Análisis Cuantitativo")
                 preguntas_cuantitativas = obtener_preguntas_cuantitativas(st.session_state.df_principal)
+
                 if preguntas_cuantitativas:
+                    seleccionar_todas = st.checkbox("Seleccionar todas las preguntas")
+
+                    if seleccionar_todas:
+                        opciones_seleccionadas = preguntas_cuantitativas
+                    else:
+                        opciones_seleccionadas = []
+
                     preguntas_seleccionadas = st.multiselect(
                         "Selecciona las preguntas cuantitativas que deseas analizar:",
-                        options=preguntas_cuantitativas
+                        options=preguntas_cuantitativas,
+                        default=opciones_seleccionadas
                     )
+                    
                     if st.button("Procesar Análisis Cuantitativo"):
                         if preguntas_seleccionadas:
                             resultados = generar_analisis_cuantitativo(st.session_state.df_principal, preguntas_seleccionadas)
                             if resultados:
-                                doc_buffer = exportar_a_word(resultados)
+                                doc_buffer = exportar_cuantitativo_a_word(resultados)
                                 st.download_button(
                                     label="Exportar a Word",
                                     data=doc_buffer,
@@ -120,7 +130,41 @@ def main():
                     )
                     if st.button("Procesar Análisis Cualitativo"):
                         if preguntas_seleccionadas:
-                            generar_analisis_cualitativo(st.session_state.df_principal, preguntas_seleccionadas)
+                            resultados = generar_analisis_cualitativo(st.session_state.df_principal, preguntas_seleccionadas)
+                            if resultados:
+                                st.subheader("Exportar análisis")
+                                doc_buffer = exportar_analisis_cualitativo_a_word(resultados)
+                                st.download_button(
+                                    label="Exportar a Word",
+                                    data=doc_buffer,
+                                    file_name="analisis_cualitativo.docx",
+                                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                )
+
+                                st.markdown("---")
+                                st.subheader("Prompt para Análisis de IA")
+                                st.write("Copia el siguiente prompt y pégalo en una de las herramientas de IA para un análisis más profundo.")
+                                
+                                prompt_completo = ""
+                                for res in resultados:
+                                    if res['tipo_analisis'] == "comentario":
+                                        prompt_completo += res['prompt'] + "\n\n"
+                                
+                                if prompt_completo:
+                                    st.text_area("Prompt para IA", value=prompt_completo, height=300)
+                                    
+                                    col_gpt, col_claude, col_gemini, col_copilot = st.columns(4)
+                                    with col_gpt:
+                                        st.link_button("ChatGPT", url="https://chat.openai.com/")
+                                    with col_claude:
+                                        st.link_button("Claude", url="https://claude.ai/")
+                                    with col_gemini:
+                                        st.link_button("Gemini", url="https://gemini.google.com/")
+                                    with col_copilot:
+                                        st.link_button("Copilot", url="https://copilot.microsoft.com/")
+                                else:
+                                    st.info("No hay preguntas de comentario seleccionadas para generar un prompt de IA.")
+
                         else:
                             st.warning("Por favor, selecciona al menos una pregunta para analizar.")
                 else:
