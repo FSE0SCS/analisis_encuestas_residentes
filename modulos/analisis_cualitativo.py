@@ -12,11 +12,12 @@ import re
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
+from nltk.downloader import DownloadError
 
 # Descargar recursos de NLTK si no están disponibles
 try:
     stopwords.words('spanish')
-except nltk.downloader.DownloadError:
+except DownloadError:
     nltk.download('punkt')
     nltk.download('stopwords')
 
