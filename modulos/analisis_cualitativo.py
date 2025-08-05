@@ -12,14 +12,12 @@ import re
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
-from nltk.downloader import DownloadError
 
-# Descargar recursos de NLTK si no están disponibles
-try:
-    stopwords.words('spanish')
-except DownloadError:
-    nltk.download('punkt')
-    nltk.download('stopwords')
+# Descargar recursos de NLTK
+# Esta es la forma más robusta de asegurar que los recursos están disponibles
+# en entornos de despliegue como Streamlit Cloud.
+nltk.download('punkt', quiet=True)
+nltk.download('stopwords', quiet=True)
 
 def obtener_preguntas_cualitativas(df):
     """
